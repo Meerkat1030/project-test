@@ -1,0 +1,116 @@
+<!-- readPost.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Read Post</title>
+    <!-- jQuery CDN을 사용하고 있다고 가정 -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+</head>
+<body>
+
+<!-- 게시글 정보 표시 -->
+<h2 th:text="${post.title}"></h2>
+<p th:text="${post.content}"></p>
+<div>
+    <h3>Author Information:</h3>
+    <p>작성자: <span th:text="${post.nickname}"></span></p>
+    <p>IP Address: <span th:text="${post.ipAddress}"></span></p>
+</div>
+<button type="button" id="goToListButton">목록으로</button>
+<!-- 댓글 목록 표시 -->
+<h3>댓글 목록</h3>
+<div th:if="${comment}">
+    <ul>
+        <li th:each="comment, commentIndex : ${comment}">
+            <!-- 순차적인 번호를 출력 -->
+            <span th:text="${commentIndex.index + 1}"></span>.
+            <span th:text="${comment.nickname}"></span>
+            <span th:text="${comment.ipAddress}"></span>
+            <span th:text="${comment.content}"></span>
+            <span th:text="${comment.createTime}"></span>
+            <span th:text="${comment.likeCount}"></span>
+            <button type="button" th:onclick="'likeComment(' + ${comment.id} + ')'" th:text="Like"></button>
+        </li>
+    </ul>
+</div>
+
+<!-- 댓글 작성 폼 -->
+<form id="commentForm">
+    <input type="hidden" th:name="postId" id="postId" th:value="${post.id}">
+    <label for="nickname">닉네임:</label>
+    <input type="text" id="nickname" name="nickname" required>
+    <br>
+    <label for="password">비밀번호:</label>
+    <input type="password" id="password" name="password" required>
+    <br>
+    <label for="content">댓글 내용:</label>
+    <textarea id="content" name="content" required></textarea>
+    <br>
+    <!-- 수정된 부분: onclick 이벤트에 직접 createComment 함수 호출 제거 -->
+    <button type="button" id="commentButton">댓글 작성</button>
+</form>
+
+
+<!-- JavaScript 코드 -->
+<script>
+    function createComment() {
+        // var postId = ${post.id}; // 게시글 ID
+        // var nickname = $("#nickname").val();
+        // var password = $("#password").val();
+        // var content = $("#content").val();
+
+        // Ajax를 이용한 비동기적인 댓글 작성
+        $.ajax({
+            type: "POST",
+            url: "/post/createComment",
+            contentType: "application/json",
+            data: JSON.stringify({
+                postId: $("#postId").val(),
+                nickname: $("#nickname").val(),
+                password: $("#password").val(),
+                content: $("#content").val()
+            }),
+            success: function (response) {
+                // 성공적으로 댓글이 작성되면 처리할 로직
+                alert("댓글이 성공적으로 저장되었습니다.");
+                location.reload();
+                // 댓글 작성 후 화면 갱신
+                // updateCommentList();
+            },
+            error: function (error) {
+                // 댓글 작성 중 에러 발생 시 처리할 로직
+                alert("댓글 작성에 실패했습니다.");
+            }
+        });
+    }
+
+    // 버튼 클릭 시 createComment 함수 호출하도록 수정
+    $(document).ready(function () {
+        $("#commentButton").click(createComment);
+    });
+
+    // "목록으로" 버튼 클릭 시 post/list 페이지로 이동
+    $("#goToListButton").click(function() {
+        window.location.href = "/post/list";
+    });
+
+    function likeComment(commentId) {
+        $.ajax({
+            type: "POST",
+            url: "/post/likeComment/" + commentId,
+            success: function (response) {
+                alert(response);
+                location.reload(); // 댓글 목록 새로고침
+            },
+            error: function (error) {
+                alert("Error liking comment");
+            }
+        });
+    }
+</script>
+
+
+
+</body>
+</html>
